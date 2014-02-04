@@ -368,13 +368,14 @@ static int RS_BLOCK_TABLE[][7] = {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-+ (UIImage *)imageForMatrix:(QRMatrix *)matrix {
-  int width = matrix.width;
-  int height = matrix.height;
++ (UIImage *)imageForMatrix:(QRMatrix *)matrix scaleFactor:(int)scaleFactor {
+	
+  int width = matrix.width * scaleFactor;
+  int height = matrix.height * scaleFactor;
   unsigned char *bytes = (unsigned char *)malloc(width * height * 4);
   for(int y = 0; y < height; y++) {
     for(int x = 0; x < width; x++) {
-      BOOL bit = [matrix getX:x y:y];
+      BOOL bit = [matrix getX:x/scaleFactor y:y/scaleFactor];
       unsigned char intensity = bit ? 0 : 255;
       for(int i = 0; i < 3; i++) {
         bytes[y * width * 4 + x * 4 + i] = intensity;
@@ -400,13 +401,13 @@ static int RS_BLOCK_TABLE[][7] = {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-+ (UIImage *)encode:(NSString *)str {
-  return [QREncoder encode:str size:4 correctionLevel:QRCorrectionLevelHigh];
++ (UIImage *)encode:(NSString *)str scaleFactor:(int)scaleFactor {
+	return [QREncoder encode:str size:4 correctionLevel:QRCorrectionLevelHigh scaleFactor:scaleFactor];
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-+ (UIImage *)encode:(NSString *)str size:(int)size correctionLevel:(QRCorrectionLevel)level {
++ (UIImage *)encode:(NSString *)str size:(int)size correctionLevel:(QRCorrectionLevel)level scaleFactor:(int)scaleFactor {
   QREncoder *encoders[8];
   for(int i = 0; i < 8; i++) {
     encoders[i] = [[QREncoder alloc] initWithStr:str size:size correctionLevel:level pattern:i];
@@ -427,7 +428,7 @@ static int RS_BLOCK_TABLE[][7] = {
 
   UIImage *image;
   if (encoder != nil) {
-    image = [QREncoder imageForMatrix:encoder->_matrix];
+	  image = [QREncoder imageForMatrix:encoder->_matrix scaleFactor:scaleFactor];
   } else {
     image = nil;
   }
