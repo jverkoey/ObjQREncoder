@@ -28,7 +28,7 @@
 #define G15_MASK (1 << 14 | 1 << 12 | 1 << 10 | 1 << 4 | 1 << 1)
 #define G18 (1 << 12 | 1 << 11 | 1 << 10 | 1 << 9 | 1 << 8 | 1 << 5 | 1 << 2 | 1 << 0)
 
-static int PATTERN_POSITION_TABLE[][8] =
+static NSInteger PATTERN_POSITION_TABLE[][8] =
   {{0, 0, 0, 0, 0, 0, 0, 0},
   {6, 18, 0, 0, 0, 0, 0, 0},
   {6, 22, 0, 0, 0, 0, 0, 0},
@@ -71,7 +71,7 @@ static int PATTERN_POSITION_TABLE[][8] =
   {6, 30, 58, 86, 114, 142, 170, 0}};
 
 
-static int RS_BLOCK_TABLE[][7] = {
+static NSInteger RS_BLOCK_TABLE[][7] = {
 //1
 {1, 26, 19, 0, 0, 0, 0},
 {1, 26, 16, 0, 0, 0, 0},
@@ -321,7 +321,7 @@ static int RS_BLOCK_TABLE[][7] = {
 #pragma mark -
 @interface QREncoder()
 - (void)encode;
-- (int)lostPoint;
+- (NSInteger)lostPoint;
 
 @end
 
@@ -335,9 +335,9 @@ static int RS_BLOCK_TABLE[][7] = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (id)initWithStr: (NSString*)str
-             size: (int)size
+             size: (NSInteger)size
   correctionLevel: (QRCorrectionLevel)correctionLevel
-          pattern: (int)pattern {
+          pattern: (NSInteger)pattern {
 
   if (self = [super init]) {
     _str              = [str copy];
@@ -345,7 +345,7 @@ static int RS_BLOCK_TABLE[][7] = {
     _correctionLevel  = correctionLevel;
     _pattern          = pattern;
 
-    int matrixSize = 4 * _size + 17;
+    NSInteger matrixSize = 4 * _size + 17;
     _matrix = [[QRMatrix alloc] initWithWidth:matrixSize height:matrixSize];
   }
 
@@ -369,14 +369,14 @@ static int RS_BLOCK_TABLE[][7] = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 + (UIImage *)imageForMatrix:(QRMatrix *)matrix {
-  int width = matrix.width;
-  int height = matrix.height;
+  NSInteger width = matrix.width;
+  NSInteger height = matrix.height;
   unsigned char *bytes = (unsigned char *)malloc(width * height * 4);
-  for(int y = 0; y < height; y++) {
-    for(int x = 0; x < width; x++) {
+  for(NSInteger y = 0; y < height; y++) {
+    for(NSInteger x = 0; x < width; x++) {
       BOOL bit = [matrix getX:x y:y];
       unsigned char intensity = bit ? 0 : 255;
-      for(int i = 0; i < 3; i++) {
+      for(NSInteger i = 0; i < 3; i++) {
         bytes[y * width * 4 + x * 4 + i] = intensity;
       }
       bytes[y * width * 4 + x * 4 + 3] = 255;
@@ -406,18 +406,18 @@ static int RS_BLOCK_TABLE[][7] = {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-+ (UIImage *)encode:(NSString *)str size:(int)size correctionLevel:(QRCorrectionLevel)level {
++ (UIImage *)encode:(NSString *)str size:(NSInteger)size correctionLevel:(QRCorrectionLevel)level {
   QREncoder *encoders[8];
-  for(int i = 0; i < 8; i++) {
+  for(NSInteger i = 0; i < 8; i++) {
     encoders[i] = [[QREncoder alloc] initWithStr:str size:size correctionLevel:level pattern:i];
     [encoders[i] encode];
   }
   
-  int minLostPoint = LONG_MAX;
+  NSInteger minLostPoint = LONG_MAX;
   QREncoder *encoder = nil;
-  for(int i = 0; i < 8; i++) {
+  for(NSInteger i = 0; i < 8; i++) {
     if (encoders[i]->_matrix != nil) {
-      int lostPoint = [encoders[i] lostPoint];
+      NSInteger lostPoint = [encoders[i] lostPoint];
       if (lostPoint < minLostPoint) {
         minLostPoint = lostPoint;
         encoder = encoders[i];
@@ -432,7 +432,7 @@ static int RS_BLOCK_TABLE[][7] = {
     image = nil;
   }
 
-  for(int i = 0; i < 8; i++) {
+  for(NSInteger i = 0; i < 8; i++) {
     [encoders[i] release];
   }
 
@@ -441,13 +441,13 @@ static int RS_BLOCK_TABLE[][7] = {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-- (void)setupPositionProbePatternAtRow:(int)row column:(int)col {
-  for(int r = -1; r <= 7; r++) {
+- (void)setupPositionProbePatternAtRow:(NSInteger)row column:(NSInteger)col {
+  for(NSInteger r = -1; r <= 7; r++) {
     if (row + r < 0 || row + r >= _matrix.height) {
       continue;
     }
 
-    for(int c = -1; c <= 7; c++) {
+    for(NSInteger c = -1; c <= 7; c++) {
       if (col + c < 0 || col + c >= _matrix.width) {
         continue;
       }
@@ -463,19 +463,19 @@ static int RS_BLOCK_TABLE[][7] = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)setupPositionAdjustPattern {
-  int *patterns = PATTERN_POSITION_TABLE[_size - 1];
+    NSInteger *patterns = PATTERN_POSITION_TABLE[_size - 1];
 
-  for(int  i = 0; patterns[i] != 0; i++) {
-    int row = patterns[i];
+  for(NSInteger  i = 0; patterns[i] != 0; i++) {
+      NSInteger row = patterns[i];
 
-    for(int j = 0; patterns[j] != 0; j++) {
-      int col = patterns[j];
+    for(NSInteger j = 0; patterns[j] != 0; j++) {
+        NSInteger col = patterns[j];
       if ([_matrix hasSetX:col y:row]) {
         continue;
       }
 
-      for(int r = -2; r <= 2; r++) {
-        for(int c = -2; c <= 2; c++) {
+      for(NSInteger r = -2; r <= 2; r++) {
+        for(NSInteger c = -2; c <= 2; c++) {
           BOOL bit = ABS(r) == 2 || ABS(c) == 2 || (r == 0 && c == 0);
           [_matrix setX:col + c y:row + r value:bit];
         }
@@ -487,7 +487,7 @@ static int RS_BLOCK_TABLE[][7] = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)setupTimingPattern {
-  for(int i = 8; i < _matrix.width - 8; i++) {
+  for(NSInteger i = 8; i < _matrix.width - 8; i++) {
     [_matrix setX:i y:6 value:i % 2 == 0];
     [_matrix setX:6 y:i value:i % 2 == 0];
   }
@@ -495,8 +495,8 @@ static int RS_BLOCK_TABLE[][7] = {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-- (int)getBchDigit:(int)data {
-  int digit = 0;
+- (NSInteger)getBchDigit:(NSInteger)data {
+    NSInteger digit = 0;
   while (data != 0) {
     digit++;
     data >>= 1;
@@ -506,8 +506,8 @@ static int RS_BLOCK_TABLE[][7] = {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-- (int)getBchTypeInfo:(int)data {
-  int d = data << 10;
+- (NSInteger)getBchTypeInfo:(NSInteger)data {
+    NSInteger d = data << 10;
 
   while ([self getBchDigit:d] >= [self getBchDigit:G15]) {
     d ^= G15 << ([self getBchDigit:d] - [self getBchDigit:G15]);
@@ -518,8 +518,8 @@ static int RS_BLOCK_TABLE[][7] = {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-- (int)getBchTypeNumber:(int)data {
-  int d = data << 12;
+- (NSInteger)getBchTypeNumber:(NSInteger)data {
+    NSInteger d = data << 12;
 
   while ([self getBchDigit:d] >= [self getBchDigit:G18]) {
     d ^= (G18 << ([self getBchDigit:d] - [self getBchDigit:G18]));
@@ -530,7 +530,7 @@ static int RS_BLOCK_TABLE[][7] = {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-- (int)correctionLevelNum {
+- (NSInteger)correctionLevelNum {
   switch (_correctionLevel) {
     case QRCorrectionLevelLow:
       return 1;
@@ -549,10 +549,10 @@ static int RS_BLOCK_TABLE[][7] = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)setupTypeInfo {
-  int data = ([self correctionLevelNum] << 3) | _pattern;
-  int bits = [self getBchTypeInfo:data];
+    NSInteger data = ([self correctionLevelNum] << 3) | _pattern;
+    NSInteger bits = [self getBchTypeInfo:data];
   
-  for(int i = 0; i < 15; i++) {
+  for(NSInteger i = 0; i < 15; i++) {
     BOOL bit = ((bits >> i) & 1) == 1;
     
     // Vertical
@@ -581,8 +581,8 @@ static int RS_BLOCK_TABLE[][7] = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)setupTypeNumber {
-  int bits = [self getBchTypeNumber:_size];
-  for(int i = 0; i < 18; i++) {
+    NSInteger bits = [self getBchTypeNumber:_size];
+  for(NSInteger i = 0; i < 18; i++) {
     BOOL bit = ((bits >> i) & 1) == 1;
     [_matrix setX:i % 3 + _matrix.width - 11 y:i / 3 value:bit];
     [_matrix setX:i / 3 y:i % 3 + _matrix.width - 11 value:bit];
@@ -591,8 +591,8 @@ static int RS_BLOCK_TABLE[][7] = {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-- (int *)getRSBlockTable {
-  int offset = [self correctionLevelNum];
+- (NSInteger *)getRSBlockTable {
+    NSInteger offset = [self correctionLevelNum];
   switch (_correctionLevel) {
     case QRCorrectionLevelLow:
       offset = 0;
@@ -619,10 +619,10 @@ static int RS_BLOCK_TABLE[][7] = {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (NSArray *)getRSBlocks {
   NSMutableArray *blocks = [[NSMutableArray alloc] init];
-  int *block = [self getRSBlockTable];
-  for(int i = 0; i == 0 || block[i - 2] != 0; i += 3) {
+    NSInteger *block = [self getRSBlockTable];
+  for(NSInteger i = 0; i == 0 || block[i - 2] != 0; i += 3) {
     QRRSBlock *block2 = [[QRRSBlock alloc] initWithTotalCount:block[i + 1] dataCount:block[i + 2]];
-    for(int j = 0; j < block[i]; j++) {
+    for(NSInteger j = 0; j < block[i]; j++) {
       [blocks addObject:block2];
     }
     [block2 release];
@@ -637,7 +637,7 @@ static int RS_BLOCK_TABLE[][7] = {
   [buffer append:4 length:4];
   [buffer append:[_str length] length:8];
 
-  for(int i = 0; i < [_str length]; i++) {
+  for(NSInteger i = 0; i < [_str length]; i++) {
     unichar c = [_str characterAtIndex:i];
     if (c >= 256) {
       [buffer release];
@@ -647,7 +647,7 @@ static int RS_BLOCK_TABLE[][7] = {
   }
   
   NSArray *rsBlocks = [self getRSBlocks];
-  int totalDataCount = 0;
+    NSInteger totalDataCount = 0;
 
   for(QRRSBlock *rsBlock in rsBlocks) {
     totalDataCount += rsBlock.dataCount;
@@ -683,12 +683,12 @@ static int RS_BLOCK_TABLE[][7] = {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-- (QRPolynomial *)errorCorrectPolynomial:(int)length {
-  int cs[2] = {1, 0};
+- (QRPolynomial *)errorCorrectPolynomial:(NSInteger)length {
+    NSInteger cs[2] = {1, 0};
 
   QRPolynomial *p = [[[QRPolynomial alloc] initWithCoeffs:cs length:1 shift:0] autorelease];
 
-  for(int i = 0; i < length; i++) {
+  for(NSInteger i = 0; i < length; i++) {
     cs[1] = [QRMath exp:i];
     QRPolynomial *p2 = [[QRPolynomial alloc] initWithCoeffs:cs length:2 shift:0];
     p = [p multiply:p2];
@@ -700,24 +700,24 @@ static int RS_BLOCK_TABLE[][7] = {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-- (int *)computeBytes:(QRBitBuffer *)data size:(int *)resultSize {
+- (NSInteger *)computeBytes:(QRBitBuffer *)data size:(NSInteger *)resultSize {
   NSArray *rsBlocks = [self getRSBlocks];
-  int offset = 0;
-  int maxDCCount = 0;
-  int maxECCount = 0;
-  int **dcData = (int **)malloc([rsBlocks count] * sizeof(int *));
-  int **ecData = (int **)malloc([rsBlocks count] * sizeof(int *));
-  int *ecCounts = (int *)malloc([rsBlocks count] * sizeof(int));
-  for(int r = 0; r < [rsBlocks count]; r++) {
+    NSInteger offset = 0;
+    NSInteger maxDCCount = 0;
+    NSInteger maxECCount = 0;
+    NSInteger **dcData = (NSInteger **)malloc([rsBlocks count] * sizeof(NSInteger *));
+    NSInteger **ecData = (NSInteger **)malloc([rsBlocks count] * sizeof(NSInteger *));
+    NSInteger *ecCounts = (NSInteger *)malloc([rsBlocks count] * sizeof(NSInteger));
+  for(NSInteger r = 0; r < [rsBlocks count]; r++) {
     QRRSBlock *rsBlock = [rsBlocks objectAtIndex:r];
-    int dcCount = rsBlock.dataCount;
-    int ecCount = rsBlock.totalCount - dcCount;
+      NSInteger dcCount = rsBlock.dataCount;
+      NSInteger ecCount = rsBlock.totalCount - dcCount;
     maxDCCount = MAX(maxDCCount, dcCount);
     maxECCount = MAX(maxECCount, ecCount);
-    
-    int *buffer = (int *)malloc(dcCount * sizeof(int));
-    memset(buffer, 0, dcCount * sizeof(int));
-    for(int i = 0; i < 8 * dcCount; i++) {
+
+      NSInteger *buffer = (NSInteger *)malloc(dcCount * sizeof(NSInteger));
+    memset(buffer, 0, dcCount * sizeof(NSInteger));
+    for(NSInteger i = 0; i < 8 * dcCount; i++) {
       if ([data get:i + 8 * offset])
         buffer[i / 8] |= 1 << (7 - (i % 8));
     }
@@ -730,26 +730,26 @@ static int RS_BLOCK_TABLE[][7] = {
                       length:dcCount
                        shift:rsPoly.length - 1];
     QRPolynomial *modPoly = [rawPoly mod:rsPoly];
-    
-    int length = rsPoly.length - 1;
+
+      NSInteger length = rsPoly.length - 1;
     ecCounts[r] = length;
-    int *es = (int *)malloc(length * sizeof(int));
-    for(int i = 0; i < length; i++) {
-      int modIndex = i + modPoly.length - length;
+      NSInteger *es = (NSInteger *)malloc(length * sizeof(NSInteger));
+    for(NSInteger i = 0; i < length; i++) {
+        NSInteger modIndex = i + modPoly.length - length;
       es[i] = modIndex >= 0 ? [modPoly get:modIndex] : 0;
     }
     ecData[r] = es;
   }
-  
-  int totalCodeCount = 0;
+
+    NSInteger totalCodeCount = 0;
   for(QRRSBlock *rsBlock in rsBlocks)
     totalCodeCount += rsBlock.totalCount;
   
   *resultSize = totalCodeCount;
-  int *data2 = (int *)malloc(totalCodeCount * sizeof(int));
-  int index = 0;
-  for(int i = 0; i < maxDCCount; i++) {
-    for(int r = 0; r < [rsBlocks count]; r++) {
+    NSInteger *data2 = (NSInteger *)malloc(totalCodeCount * sizeof(NSInteger));
+    NSInteger index = 0;
+  for(NSInteger i = 0; i < maxDCCount; i++) {
+    for(NSInteger r = 0; r < [rsBlocks count]; r++) {
       QRRSBlock *rsBlock = [rsBlocks objectAtIndex:r];
       if (i < rsBlock.dataCount) {
         data2[index] = dcData[r][i];
@@ -758,8 +758,8 @@ static int RS_BLOCK_TABLE[][7] = {
     }
   }
   
-  for(int i = 0; i < maxECCount; i++) {
-    for(int r = 0; r < [rsBlocks count]; r++) {
+  for(NSInteger i = 0; i < maxECCount; i++) {
+    for(NSInteger r = 0; r < [rsBlocks count]; r++) {
       if (i < ecCounts[r]) {
         data2[index] = ecData[r][i];
         index++;
@@ -767,7 +767,7 @@ static int RS_BLOCK_TABLE[][7] = {
     }
   }
   
-  for(int i = 0; i < [rsBlocks count]; i++) {
+  for(NSInteger i = 0; i < [rsBlocks count]; i++) {
     free(dcData[i]);
     free(ecData[i]);
   }
@@ -780,7 +780,7 @@ static int RS_BLOCK_TABLE[][7] = {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-- (BOOL)maskForRow:(int)i col:(int)j {
+- (BOOL)maskForRow:(NSInteger)i col:(NSInteger)j {
   switch (_pattern) {
     case 0:
       return (i + j) % 2 == 0;
@@ -806,13 +806,13 @@ static int RS_BLOCK_TABLE[][7] = {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-- (void)mapData:(int *)bytes size:(int)dataSize {
-  int inc = -1;
-  int row = _matrix.height - 1;
-  int bitIndex = 7;
-  int byteIndex = 0;
-  for(int col2 = _matrix.width - 1; col2 >= 1; col2 -= 2) {
-    int col;
+- (void)mapData:(NSInteger *)bytes size:(NSInteger)dataSize {
+    NSInteger inc = -1;
+    NSInteger row = _matrix.height - 1;
+    NSInteger bitIndex = 7;
+    NSInteger byteIndex = 0;
+  for(NSInteger col2 = _matrix.width - 1; col2 >= 1; col2 -= 2) {
+      NSInteger col;
     if (col2 > 6) {
       col = col2;
     } else {
@@ -820,7 +820,7 @@ static int RS_BLOCK_TABLE[][7] = {
     }
 
     while (YES) {
-      for(int c = 0; c < 2; c++) {
+      for(NSInteger c = 0; c < 2; c++) {
         if (![_matrix hasSetX:col - c y:row]) {
           BOOL bit = NO;
           if (byteIndex < dataSize) {
@@ -869,8 +869,8 @@ static int RS_BLOCK_TABLE[][7] = {
     _matrix = nil;
 
   } else {
-    int dataSize = 0;
-    int *bytes = [self computeBytes:data size:&dataSize];
+      NSInteger dataSize = 0;
+      NSInteger *bytes = [self computeBytes:data size:&dataSize];
     [self mapData:bytes size:dataSize];
     free(bytes);
   }
@@ -878,19 +878,19 @@ static int RS_BLOCK_TABLE[][7] = {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-- (int)lostPoint {
-  int lostPoint = 0;
+- (NSInteger)lostPoint {
+    NSInteger lostPoint = 0;
   
   //Level 1
-  for(int row = 0; row < _matrix.height; row++) {
-    for(int col = 0; col < _matrix.width; col++) {
-      int sameCount = 0;
+  for(NSInteger row = 0; row < _matrix.height; row++) {
+    for(NSInteger col = 0; col < _matrix.width; col++) {
+        NSInteger sameCount = 0;
       BOOL bit = [_matrix getX:col y:row];
-      for(int r = -1; r <= 1; r++) {
+      for(NSInteger r = -1; r <= 1; r++) {
         if (row + r < 0 || row + r >= _matrix.height) {
           continue;
         }
-        for(int c = -1; c <= 1; c++) {
+        for(NSInteger c = -1; c <= 1; c++) {
           if (col + c < 0 || col + c >= _matrix.height) {
             continue;
           }
@@ -906,12 +906,12 @@ static int RS_BLOCK_TABLE[][7] = {
   }
   
   //Level 2
-  for(int row = 0; row < _matrix.height - 1; row++) {
-    for(int col = 0; col < _matrix.width - 1; col++) {
-      int count = 0;
+  for(NSInteger row = 0; row < _matrix.height - 1; row++) {
+    for(NSInteger col = 0; col < _matrix.width - 1; col++) {
+        NSInteger count = 0;
 
-      for(int r = 0; r < 1; r++) {
-        for(int c = 0; c < 1; c++) {
+      for(NSInteger r = 0; r < 1; r++) {
+        for(NSInteger c = 0; c < 1; c++) {
           if ([_matrix getX:col + c y:row + r]) {
             count++;
           }
@@ -925,8 +925,8 @@ static int RS_BLOCK_TABLE[][7] = {
   }
   
   //Level 3
-  for(int row = 0; row < _matrix.height - 6; row++) {
-    for(int col = 0; col < _matrix.width; col++) {
+  for(NSInteger row = 0; row < _matrix.height - 6; row++) {
+    for(NSInteger col = 0; col < _matrix.width; col++) {
       if ([_matrix getX:col y:row] &&
           ![_matrix getX:col y:row + 1] &&
           [_matrix getX:col y:row + 2] &&
